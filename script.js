@@ -4,9 +4,11 @@ const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 const body = document.querySelector('body');
 let message = "loading the model...";
+const widthOfCanvas = 1280;
+const heightOfCanvas = 720;
 
-canvas.width = 1280;
-canvas.height = 960;
+canvas.width = widthOfCanvas;
+canvas.height = heightOfCanvas;
 
 const drawRect = (p1, width, height, color) => {
   context.beginPath();
@@ -28,15 +30,15 @@ const drawTitle = () => {
   context.fillText("HAND RECOGNITION BACKGROUND COLOR CHANGE", canvas.width/2, 50);
 }
 
-const draw = () => {
-  drawRect({x: 0,y: 0}, 640, 480, "#ff0000");
-  drawRect({x: 640,y: 0}, 640, 480, "#00ff00");
-  drawRect({x: 0,y: 480}, 640, 480, "#0000ff");
-  drawRect({x: 640,y: 480}, 640, 480, "#ffff00");
+const draw = (a, b) => {
+  drawRect({x: 0,y: 0}, a, b, "#ff0000");
+  drawRect({x: a,y: 0}, a, b, "#00ff00");
+  drawRect({x: 0,y: b}, a, b, "#0000ff");
+  drawRect({x: a,y: b}, a, b, "#ffff00");
   drawText();
 }
 
-draw();
+draw(widthOfCanvas/2, heightOfCanvas/2);
 drawTitle();
 
 const hasGetUserMedia = () => {
@@ -46,7 +48,10 @@ const hasGetUserMedia = () => {
 if(hasGetUserMedia()) {
   let predictions = [];
   const constraints = {
-    video: true,
+    video: {
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    },
   }
 
   const video = document.querySelector('video');
@@ -57,8 +62,15 @@ if(hasGetUserMedia()) {
   const modelLoaded = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
     message = "Show you hand within the color quadrants to change the background color of the body";
-    draw();
+    draw(widthOfCanvas/2, heightOfCanvas/2);
     drawTitle();  
+  }
+
+  const drawPoints = (x, y) => {
+    context.beginPath();
+    context.fillStyle = "#000000";
+    context.arc(x, y, 5, 0, Math.PI * 2, true);
+    context.fill();
   }
 
   const handpose = ml5.handpose(video, modelLoaded); 
@@ -66,19 +78,26 @@ if(hasGetUserMedia()) {
   handpose.on('predict', results => {
     predictions = results;
     for(const prediction of predictions) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      draw(widthOfCanvas/2, heightOfCanvas/2);
+      drawTitle();
       const landmarks = prediction.landmarks;
-      const indexFingerLandmarks = [landmarks[5],landmarks[6],landmarks[7],landmarks[8]];
-      for(const point of indexFingerLandmarks) {
-        if(point[0] > 0 && point[0] < 320 && point[1] > 0 && point[1] < 240) {
+      //const indexFingerLandmarks = [landmarks[5],landmarks[6],landmarks[7],landmarks[8]];
+      for(const point of landmarks) {
+        if(point[0] > 0 && point[0] < widthOfCanvas/2 && point[1] > 0 && point[1] < heightOfCanvas/2) {
+          drawPoints(point[0], point[1]);
           body.style.backgroundColor = "red";
         }
-        else if(point[0] > 320 && point[0] < 640 && point[1] > 0 && point[1] < 240) {
+        else if(point[0] > widthOfCanvas/2 && point[0] < widthOfCanvas && point[1] > 0 && point[1] < heightOfCanvas/2) {
+          drawPoints(point[0], point[1]);
           body.style.backgroundColor = "green";
         }
-        else if(point[0] > 0 && point[0] < 320 && point[1] > 240 && point[1] < 480) {
+        else if(point[0] > 0 && point[0] < widthOfCanvas/2 && point[1] > heightOfCanvas/2 && point[1] < heightOfCanvas) {
+          drawPoints(point[0], point[1]);
           body.style.backgroundColor = "blue";
         }
-        else if(point[0] > 320 && point[0] < 640 && point[1] > 240 && point[1] < 480) {
+        else if(point[0] > widthOfCanvas/2 && point[0] < widthOfCanvas && point[1] > heightOfCanvas/2 && point[1] < heightOfCanvas) {
+          drawPoints(point[0], point[1]);
           body.style.backgroundColor = "yellow";
         }
       }
