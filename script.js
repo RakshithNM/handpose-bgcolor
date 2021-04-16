@@ -7,6 +7,8 @@ let message = "loading the model...";
 const widthOfCanvas = 1280;
 const heightOfCanvas = 720;
 
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(navigator.userAgent)
+
 canvas.width = widthOfCanvas;
 canvas.height = heightOfCanvas;
 
@@ -45,7 +47,7 @@ const hasGetUserMedia = () => {
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 }
 
-if(hasGetUserMedia()) {
+if(hasGetUserMedia() && !isMobile) {
   let predictions = [];
   const constraints = {
     video: {
@@ -105,6 +107,6 @@ if(hasGetUserMedia()) {
   });
 
 } else {
-  alert("getUserMedia() is not supported by your browser");
+  alert("getUserMedia() is not supported by your browser, open site on a computer");
 }
 
